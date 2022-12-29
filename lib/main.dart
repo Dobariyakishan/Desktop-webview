@@ -4,10 +4,13 @@ import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:flutter_web_app/api.dart';
 import 'package:flutter_web_app/webview.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:platform_device_id_platform_interface/platform_device_id_platform_interface.dart';
+
+import 'mobileWebView.dart';
 
 void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +20,7 @@ void main(List<String> args) {
   }
 
 
-  runApp( MyApp());
+  runApp( const MyStatefulWidget());
 }
 class MyApp extends StatefulWidget {
   @override
@@ -31,12 +34,27 @@ class _MyAppState extends State<MyApp> {
   void initState() {
 
     initPlatformState();
+    abc();
     if (kIsWeb) {
       debugPrint('kIsWeb: $kIsWeb');
     } else {
       // NOT running on the web! You can check for additional platforms here.
     }
+
     super.initState();
+  }
+
+  abc()async{
+    log('web id : ${await WebviewWindow.isWebviewAvailable()}');
+    final webview = await WebviewWindow.create(
+        configuration: CreateConfiguration(
+            title: 'Letmegrab Ads'
+        )
+    );
+
+    webview.setBrightness(Brightness.dark);
+    webview.launch("https://alphabusiness.letmegrab.in/");
+
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -48,7 +66,6 @@ class _MyAppState extends State<MyApp> {
     } on PlatformException {
       deviceId = 'Failed to get deviceId.';
     }
-
     // If the widget was removed from the tree while the asynchronous platform
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
@@ -58,10 +75,14 @@ class _MyAppState extends State<MyApp> {
       _deviceId = deviceId;
       print("deviceId->$_deviceId");
     });
+    if(_deviceId !=null){
+      API().addDeviceID(deviceID: _deviceId??'');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
@@ -89,7 +110,9 @@ class Button extends StatelessWidget {
         ElevatedButton(onPressed: ()async{
           log('web id : ${await WebviewWindow.isWebviewAvailable()}');
           final webview = await WebviewWindow.create(
-
+             configuration: CreateConfiguration(
+  title: 'Letmegrab Ads'
+)
           );
 
           webview.setBrightness(Brightness.dark);
