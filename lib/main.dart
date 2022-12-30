@@ -1,110 +1,85 @@
 import 'dart:developer';
+import 'dart:io';
 
-import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
-import 'package:flutter/services.dart';
-import 'package:flutter_web_app/webview.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_web_app/api_service.dart';
+import 'package:webview_win_floating/webview.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:platform_device_id/platform_device_id.dart';
 
-import 'package:platform_device_id_platform_interface/platform_device_id_platform_interface.dart';
-
-void main(List<String> args) {
-  WidgetsFlutterBinding.ensureInitialized();
-  debugPrint('argssd: ${args}');
-  if (runWebViewTitleBarWidget(args)) {
-    return;
-  }
-
-
-  runApp( MyApp());
-}
-class MyApp extends StatefulWidget {
-  @override
-  _MyAppState createState() => _MyAppState();
+void main() {
+  if (Platform.isWindows) WebView.platform = WindowsWebViewPlugin();
+  runApp(const MyApp());
 }
 
-class _MyAppState extends State<MyApp> {
-  String? _deviceId;
-
-  @override
-  void initState() {
-
-    initPlatformState();
-    if (kIsWeb) {
-      debugPrint('kIsWeb: $kIsWeb');
-    } else {
-      // NOT running on the web! You can check for additional platforms here.
-    }
-    super.initState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String? deviceId = '';
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      deviceId = await PlatformDeviceIdPlatform.instance.getDeviceId();
-    } on PlatformException {
-      deviceId = 'Failed to get deviceId.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _deviceId = deviceId;
-      print("deviceId->$_deviceId");
-    });
-  }
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin first Page'),
-        ),
-        body: Button(deviceID: _deviceId??'',)
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class Button extends StatelessWidget {
-  final String deviceID;
-  const Button({Key? key,
-    required this.deviceID}) : super(key: key);
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  late WebViewController controller;
+
+  @override
+  void initState() {
+    _init();
+    super.initState();
+  }
+
+  Future<void> _init() async {
+    final String deviceId = await _getDeviceId();
+    ApiService().addDeviceID(deviceId);
+  }
+
+  Future<String> _getDeviceId() async {
+    String? deviceId;
+    try {
+      deviceId = await PlatformDeviceId.getDeviceId;
+    } catch (e) {
+      //deviceId = 'Failed to get deviceId.';
+      log('Failed to get deviceId.');
+    }
+
+    return deviceId ?? '';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return  Column(mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Center(
-          child: Text('Device ID : $deviceID'),
-        ),
-        ElevatedButton(onPressed: ()async{
-          log('web id : ${await WebviewWindow.isWebviewAvailable()}');
-          final webview = await WebviewWindow.create(
+    /*
+    https://pub.dev/packages/webview_win_floating
+    */
 
-          );
+    final Widget webview = WebView(
+      initialUrl: "http://192.168.29.16:3001/register",
+      javascriptMode: JavascriptMode.unrestricted,
+      onWebViewCreated: (controller) {
+        this.controller = controller;
+      },
+    );
 
-          webview.setBrightness(Brightness.dark);
-          webview.launch("https://alphabusiness.letmegrab.in/");
-
-          // Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) =>  ExampleBrowser()),
-          // );
-        }, child: Text('Next'))
-
-      ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: webview,
     );
   }
 }
-
-
-
