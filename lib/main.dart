@@ -5,12 +5,11 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_web_app/api.dart';
+import 'package:flutter_web_app/mobileWebView.dart';
 import 'package:flutter_web_app/webview.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:platform_device_id_platform_interface/platform_device_id_platform_interface.dart';
-
-import 'mobileWebView.dart';
 
 void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +19,7 @@ void main(List<String> args) {
   }
 
 
-  runApp( const MyStatefulWidget());
+  runApp( MyStatefulWidget());
 }
 class MyApp extends StatefulWidget {
   @override
@@ -128,6 +127,7 @@ class Button extends StatelessWidget {
     );
   }
 }
+
 
 
 
